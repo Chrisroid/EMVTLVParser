@@ -145,7 +145,8 @@ object EmvParser {
         return when (tag) {
             "57", "5A" -> {
                 val pan = valueHex.takeWhile { it != 'F' && it != 'f' }
-                "$baseInterpretation: $pan"
+                val maskedPan = maskPan(pan)
+                "$baseInterpretation: $maskedPan"
             }
             "84" -> {
                 "$baseInterpretation: $valueHex"
@@ -170,4 +171,19 @@ object EmvParser {
 
     private fun ByteArray.toHexString(): String =
         joinToString("") { "%02X".format(it) }
+
+    /**
+     * Masks a Primary Account Number (PAN) string.
+     * Shows the first 6 and last 4 digits.
+     * e.g., "4567890123451234" -> "456789...1234"
+     */
+    private fun maskPan(pan: String): String {
+        // Only mask if the PAN is long enough to be meaningful
+        return if (pan.length > 10) {
+            "${pan.take(6)}...${pan.takeLast(4)}"
+        } else {
+            // Can't apply 6...4 mask, just show first 6
+            "${pan.take(6)}..."
+        }
+    }
 }
